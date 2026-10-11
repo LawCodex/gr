@@ -1,0 +1,5 @@
+requests
+lxml
+pypdf
+pyyaml
+# also requires poppler-utils (pdftotext) on PATH
