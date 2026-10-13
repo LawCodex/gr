@@ -96,7 +96,8 @@ ART_RE = re.compile(r"^(\**\s?(?:Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|�
                     r"(\d+[α-ωΑ-Ω]{0,2}\s*[΄'’]?(?:\s*(?:[-–]|έως|και)\s*\d+[α-ωΑ-Ω]{0,2}\s*[΄'’]?)?|"
                     r"[Α-ΩΆ-Ώα-ωά-ώ]+(?:\s[Α-ΩΆ-Ώα-ωά-ώ]+)?)"
                     r"\s*(?:[-–—:.]\s*(.*)|(\(.*\)))?$")
-ART_LOOSE = re.compile(r"^\**\s?(Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|ΑΡΘΡΟΝ|Άρθρα|ΑΡΘΡΑ)\s+(\d+|[Α-ΩΆ-Ώ][Α-ΩΆ-Ώα-ωά-ώ]*)\b")
+ART_LOOSE = re.compile(r"^\**\s?(Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|ΑΡΘΡΟΝ|Άρθρα|ΑΡΘΡΑ)\s+(\d+|[Α-ΩΆ-Ώ][Α-ΩΆ-Ώα-ωά-ώ]*|"
+                       r"(?:πρώτο|δεύτερο|τρίτο|τέταρτο|πέμπτο|έκτο|έβδομο|όγδοο|ένατο|δέκατο)\S*)\b")
 
 DROP_RE = [re.compile(p) for p in [
     r"^ΕΦΗΜΕΡΙ[ΣΔ]Α?\s*ΤΗΣ\s*ΚΥΒΕΡΝΗΣΕΩΣ",
@@ -376,7 +377,11 @@ def find_acts(paras):
     return res
 
 
-def cut_act(paras, tcfg, number):
+def cut_act(paras, tcfg, number, others=()):
+    """Cut the act (heading of kind tcfg with the given number) out of the issue's paragraphs.
+    The act ends at the next act heading that is not inside a «» quotation (quoted decisions
+    and acts are part of the text), at the heading of another act of the same issue listed in
+    the index (`others`: set of (head regex, number)), or at the Printing Office back page."""
     acts = find_acts(paras)
     head = re.compile("^" + tcfg["head"])
     cands = [a for a in acts if head.match(a[1])]
@@ -393,15 +398,21 @@ def cut_act(paras, tcfg, number):
     if sel is None:
         return None
     start = sel[0]
+    heads = {a[0]: a for a in acts if a[0] > start}
     end = len(paras)
-    for a in acts:
-        if a[0] > start:
-            end = a[0]
-            break
-    for j in range(start, end):
-        if paras[j][0] == "\x00END":
+    depth = 0
+    for j in range(start, len(paras)):
+        t = paras[j][0]
+        if t == "\x00END":
             end = j
             break
+        if j in heads and j > start:
+            a = heads[j]
+            other = any(re.match("^" + h, a[1]) and a[2] == n for h, n in others)
+            if depth == 0 or other:
+                end = j
+                break
+        depth = max(0, depth + quote_delta(t))
     return paras[start:end]
 
 
@@ -679,7 +690,9 @@ def convert_issue(job):
     for cat, x, rel in entries:
         t = TYPES[cat]
         num = x["search_LawProtocolNumber"].strip() or None
-        seg = cut_act(paras, t, num)
+        others = {(TYPES[c2]["head"], (e2["search_LawProtocolNumber"].strip() or None))
+                  for c2, e2, r2 in entries if r2 != rel}
+        seg = cut_act(paras, t, num, others)
         whole = False
         if seg is None:
             # fall back to the whole issue only when it holds a single act
