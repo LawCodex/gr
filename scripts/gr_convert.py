@@ -55,14 +55,48 @@ ACT_HEAD = re.compile(
     r"ΠΡΟΕΔΡΙΚΑ\s*ΔΙΑΤΑΓΜΑΤΑ|ΝΟΜΟΙ)\b(.*)$")
 NUM_RE = re.compile(r"ΑΡΙΘ[^\d]{0,6}(\d+)")
 STRUCT = [("ΠΑΡΑΡΤΗΜΑ", 1), ("ΒΙΒΛΙΟ", 1), ("ΜΕΡΟΣ", 2), ("ΤΙΤΛΟΣ", 3), ("ΚΕΦΑΛΑΙΟ", 4), ("ΤΜΗΜΑ", 5),
-          ("ΥΠΟΚΕΦΑΛΑΙΟ", 5), ("ΕΝΟΤΗΤΑ", 6)]
-STRUCT_RE = re.compile(r"^(ΠΑΡΑΡΤΗΜΑ|ΒΙΒΛΙΟ|ΜΕΡΟΣ|ΤΙΤΛΟΣ|ΚΕΦΑΛΑΙΟ|ΥΠΟΚΕΦΑΛΑΙΟ|ΤΜΗΜΑ|ΕΝΟΤΗΤΑ)\s+"
+          ("ΥΠΟΚΕΦΑΛΑΙΟ", 5), ("ΕΝΟΤΗΤΑ", 6), ("ΥΠΟΤΜΗΜΑ", 7)]
+_STRUCT1 = re.compile(r"^(ΠΑΡΑΡΤΗΜΑ|ΒΙΒΛΙΟ|ΜΕΡΟΣ|ΤΙΤΛΟΣ|ΚΕΦΑΛΑΙΟ|ΥΠΟΚΕΦΑΛΑΙΟ|ΤΜΗΜΑ|ΕΝΟΤΗΤΑ)\s+"
                        r"([Α-ΩA-Z0-9]{1,6}[΄'’`]?|ΠΡΩΤΟ|ΔΕΥΤΕΡΟ|ΤΡΙΤΟ|ΤΕΤΑΡΤΟ|ΠΕΜΠΤΟ|ΕΚΤΟ|ΕΒΔΟΜΟ|"
                        r"ΟΓΔΟΟ|ΕΝΑΤΟ|ΔΕΚΑΤΟ\S*|ΠΡΩΤΟΣ|ΔΕΥΤΕΡΟΣ|ΤΡΙΤΟΣ|ΤΕΤΑΡΤΟΣ|ΠΕΜΠΤΟΣ|ΕΚΤΟΣ|ΕΒΔΟΜΟΣ|ΟΓΔΟΟΣ|ΕΝΑΤΟΣ)"
                        r"(\s.*)?$")
-ART_RE = re.compile(r"^(\**\s?(?:Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|Αρθρον|ΑΡΘΡΟΝ))\s+(\d+[α-ω]?\s*[΄'’]?|[Α-ΩΆ-Ώα-ωά-ώ]+(?:\s[Α-ΩΆ-Ώα-ωά-ώ]+)?)"
-                    r"\s*(?:[-–—:.]\s*(.*))?$")
-ART_LOOSE = re.compile(r"^\**\s?(Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|ΑΡΘΡΟΝ)\s+(\d+|[Α-ΩΆ-Ώ][Α-ΩΆ-Ώα-ωά-ώ]*)\b")
+_ORD = (r"(ΠΡΩΤΟ|ΔΕΥΤΕΡΟ|ΤΡΙΤΟ|ΤΕΤΑΡΤΟ|ΠΕΜΠΤΟ|ΕΚΤΟ|ΕΒΔΟΜΟ|ΟΓΔΟΟ|ΕΝΑΤΟ|ΔΕΚΑΤΟ|ΕΝΔΕΚΑΤΟ|ΔΩΔΕΚΑΤΟ|"
+        r"ΔΕΚΑΤΟ\s+\S+|ΕΙΚΟΣΤΟ\S*(?:\s+\S+)?|ΤΡΙΑΚΟΣΤΟ\S*(?:\s+\S+)?|ΠΡΩΤΗ|ΔΕΥΤΕΡΗ|ΤΡΙΤΗ|ΤΕΤΑΡΤΗ|ΠΕΜΠΤΗ|ΕΚΤΗ|"
+        r"ΕΒΔΟΜΗ|ΟΓΔΟΗ|ΕΝΑΤΗ|ΔΕΚΑΤΗ|ΠΡΩΤΟΣ|ΔΕΥΤΕΡΟΣ|ΤΡΙΤΟΣ|ΤΕΤΑΡΤΟΣ|ΠΕΜΠΤΟΣ|ΕΚΤΟΣ|ΕΒΔΟΜΟΣ|ΟΓΔΟΟΣ|ΕΝΑΤΟΣ|ΔΕΚΑΤΟΣ)")
+_STRUCT2 = re.compile(r"^" + _ORD + r"\s+(ΒΙΒΛΙΟ|ΜΕΡΟΣ|ΤΙΤΛΟΣ|ΚΕΦΑΛΑΙΟ|ΤΜΗΜΑ|ΕΝΟΤΗΤΑ)\b(\s.*)?$")
+_ROMAN = re.compile(r"^([ΙΧIVX]{1,6})\.\s+(\S.*)$")
+
+
+class _StructMatch:
+    def __init__(self, kind, label, rest):
+        self._g = (None, kind, label, rest)
+
+    def group(self, i):
+        return self._g[i]
+
+
+class _StructRE:
+    """Matches structural headings: 'ΚΕΦΑΛΑΙΟ Α΄', 'ΠΡΩΤΟ ΚΕΦΑΛΑΙΟ', 'Ι. ΒΑΣΙΚΕΣ ΑΡΧΕΣ'."""
+
+    def match(self, s):
+        m = _STRUCT1.match(s)
+        if m:
+            return m
+        m = _STRUCT2.match(s)
+        if m:
+            return _StructMatch(m.group(2), m.group(1), m.group(3))
+        m = _ROMAN.match(s)
+        if m and is_upper_text(m.group(2)) and len(s) < 160:
+            return _StructMatch("ΥΠΟΤΜΗΜΑ", m.group(1), " " + m.group(2))
+        return None
+
+
+STRUCT_RE = _StructRE()
+ART_RE = re.compile(r"^(\**\s?(?:Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|Αρθρον|ΑΡΘΡΟΝ|Άρθρα|ΑΡΘΡΑ))\s+"
+                    r"(\d+[α-ωΑ-Ω]{0,2}\s*[΄'’]?(?:\s*(?:[-–]|έως|και)\s*\d+[α-ωΑ-Ω]{0,2}\s*[΄'’]?)?|"
+                    r"[Α-ΩΆ-Ώα-ωά-ώ]+(?:\s[Α-ΩΆ-Ώα-ωά-ώ]+)?)"
+                    r"\s*(?:[-–—:.]\s*(.*)|(\(.*\)))?$")
+ART_LOOSE = re.compile(r"^\**\s?(Άρθρο|Αρθρο|ΑΡΘΡΟ|Άρθρον|ΑΡΘΡΟΝ|Άρθρα|ΑΡΘΡΑ)\s+(\d+|[Α-ΩΆ-Ώ][Α-ΩΆ-Ώα-ωά-ώ]*)\b")
 
 DROP_RE = [re.compile(p) for p in [
     r"^ΕΦΗΜΕΡΙ[ΣΔ]Α?\s*ΤΗΣ\s*ΚΥΒΕΡΝΗΣΕΩΣ",
@@ -504,6 +538,23 @@ def to_markdown(seg, title_line, quotes=True, any_case_titles=False):
         out.append("**" + md_escape(rest[toc_start][0]) + "**")
         out.extend(md_escape(t) for t, c in rest[toc_start + 1:toc_end])
         k = toc_end
+    # a quotation spanning most of the act (e.g. a whole code ratified by the act) is treated
+    # as the act's own text so that its structure becomes headings
+    big = [False] * len(rest)
+    d0, start0 = 0, None
+    for j, (t, c) in enumerate(rest):
+        before = d0
+        d0 = max(0, d0 + quote_delta(t))
+        if before == 0 and d0 > 0:
+            start0 = j
+        if before > 0 and d0 == 0 and start0 is not None:
+            if j - start0 > 100 and j - start0 > 0.5 * len(rest):
+                for q in range(start0 + 1, j + 1):
+                    big[q] = True
+            start0 = None
+    if d0 > 0 and start0 is not None and len(rest) - start0 > 100 and len(rest) - start0 > 0.5 * len(rest):
+        for q in range(start0 + 1, len(rest)):
+            big[q] = True
     depth = 0
     quote_len = 0
     last_art = 0
@@ -511,8 +562,10 @@ def to_markdown(seg, title_line, quotes=True, any_case_titles=False):
         t, c = rest[k]
         k += 1
         n = norm(t)
-        in_quote = quotes and (depth > 0 or t.lstrip().startswith(("«", '"', "“")))
-        sm = STRUCT_RE.match(n) if len(t) < 160 and is_upper_text(t.split()[0]) else None
+        if big[k - 1]:
+            depth = 0
+        in_quote = quotes and not big[k - 1] and (depth > 0 or t.lstrip().startswith(("«", '"', "“")))
+        sm = STRUCT_RE.match(n) if len(t) < 160 and is_upper_text(" ".join(t.split()[:2])) else None
         am = ART_RE.match(t) if len(t) < 200 else None
         if am and in_quote and depth > 0 and not t.lstrip().startswith("«"):
             num = art_number(f"{am.group(1)} {am.group(2)}")
@@ -539,7 +592,7 @@ def to_markdown(seg, title_line, quotes=True, any_case_titles=False):
             num = art_number(label)
             if num is not None:
                 last_art = num
-            extra = (am.group(3) or "").strip()
+            extra = (am.group(3) or am.group(4) or "").strip()
             out.append("#" * art_level + " " + md_escape_heading(label))
             if extra:
                 out.append(f"**{md_escape(extra)}**")
