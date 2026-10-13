@@ -68,10 +68,15 @@ article sequence; everything else is raw OCR output.
   listed above were OCR'd. A few early-2000 issues are also scans (55 issues of 2000, a handful
   later).
 - **92 presidential decrees** (2000–2026) whose text could not be cut out of a multi-act ΦΕΚ issue
-  (two acts set side by side, tables, etc.); they are listed in the conversion log produced by
-  `gr_convert.py` (`_raw/gr/convert.log`). No laws are missing for this reason. 41 single-act
+  (two acts set side by side, tables, etc.); see the list below. No laws are missing for this
+  reason. 41 single-act
   issues where the act heading was not recognised reproduce the full issue text (front-matter
   `note`).
+  <details><summary>Presidential decrees not extracted (92)</summary>
+
+  pd-86-2000 (Α 72/2000), pd-177-2000 (Α 164/2000), pd-322-2000 (Α 265/2000), pd-38-2001 (Α 27/2001), pd-123-2001 (Α 113/2001), pd-284-2001 (Α 198/2001), pd-360-2001 (Α 244/2001), pd-371-2001 (Α 250/2001), pd-37-2002 (Α 38/2002), pd-155-2002 (Α 135/2002), pd-174-2002 (Α 157/2002), pd-200-2002 (Α 179/2002), pd-216-2002 (Α 203/2002), pd-270-2002 (Α 234/2002), pd-29-2003 (Α 34/2003), pd-32-2003 (Α 34/2003), pd-63-2003 (Α 64/2003), pd-173-2003 (Α 143/2003), pd-272-2003 (Α 242/2003), pd-274-2003 (Α 242/2003), pd-284-2003 (Α 246/2003), pd-286-2003 (Α 246/2003), pd-288-2003 (Α 246/2003), pd-315-2003 (Α 269/2003), pd-318-2003 (Α 270/2003), pd-15-2004 (Α 9/2004), pd-40-2004 (Α 36/2004), pd-43-2004 (Α 36/2004), pd-46-2004 (Α 39/2004), pd-121-2004 (Α 84/2004), pd-161-2004 (Α 129/2004), pd-201-2004 (Α 176/2004), pd-216-2004 (Α 198/2004), pd-218-2004 (Α 198/2004), pd-229-2004 (Α 215/2004), pd-232-2004 (Α 215/2004), pd-21-2005 (Α 22/2005), pd-94-2005 (Α 130/2005), pd-99-2005 (Α 135/2005), pd-192-2005 (Α 234/2005), pd-216-2005 (Α 261/2005), pd-221-2005 (Α 263/2005), pd-225-2005 (Α 271/2005), pd-226-2005 (Α 271/2005), pd-235-2005 (Α 281/2005), pd-248-2005 (Α 299/2005), pd-11-2006 (Α 9/2006), pd-44-2006 (Α 45/2006), pd-59-2006 (Α 63/2006), pd-74-2006 (Α 71/2006), pd-87-2006 (Α 88/2006), pd-153-2006 (Α 166/2006), pd-161-2006 (Α 171/2006), pd-41-2007 (Α 48/2007), pd-103-2007 (Α 121/2007), pd-163-2007 (Α 203/2007), pd-210-2007 (Α 237/2007), pd-212-2007 (Α 237/2007), pd-221-2007 (Α 255/2007), pd-224-2007 (Α 255/2007), pd-20-2008 (Α 35/2008), pd-70-2008 (Α 97/2008), pd-88-2008 (Α 127/2008), pd-127-2008 (Α 189/2008), pd-133-2008 (Α 191/2008), pd-149-2008 (Α 212/2008), pd-152-2008 (Α 212/2008), pd-80-2009 (Α 98/2009), pd-146-2009 (Α 188/2009), pd-175-2009 (Α 207/2009), pd-182-2009 (Α 211/2009), pd-26-2010 (Α 60/2010), pd-27-2010 (Α 60/2010), pd-36-2010 (Α 77/2010), pd-41-2010 (Α 83/2010), pd-49-2010 (Α 88/2010), pd-98-2010 (Α 172/2010), pd-23-2011 (Α 73/2011), pd-37-2011 (Α 95/2011), pd-44-2011 (Α 110/2011), pd-120-2011 (Α 254/2011), pd-121-2011 (Α 254/2011), pd-93-2012 (Α 146/2012), pd-41-2014 (Α 76/2014), pd-48-2014 (Α 83/2014), pd-22-2015 (Α 18/2015), pd-57-2015 (Α 91/2015), pd-43-2017 (Α 69/2017), pd-80-2019 (Α 118/2019), pd-6-2020 (Α 5/2020), pd-59-2023 (Α 112/2023), pd-76-2023 (Α 129/2023)
+
+  </details>
 - **Secondary legislation** (ministerial decisions — ΦΕΚ Β', regulatory acts, etc.) is not included
   (hundreds of thousands of documents).
 - **Consolidated versions**: not available from any official open source (see above).
